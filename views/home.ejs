@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>User Dashboard</title>
+</head>
+
+<body
+    class="bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-500 flex items-center justify-center min-h-screen">
+    <!-- Main Dashboard Container -->
+    <div
+        class="w-[350px] sm:w-[400px] h-[90vh] bg-gradient-to-b from-white/80 to-white/60 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden relative">
+        <!-- Decorative Gradients -->
+        <div
+            class="absolute -top-16 -right-16 w-48 h-48 bg-gradient-to-br from-yellow-300 to-red-400 rounded-full blur-3xl opacity-50">
+        </div>
+        <div
+            class="absolute -bottom-16 -left-16 w-48 h-48 bg-gradient-to-br from-green-300 to-teal-500 rounded-full blur-3xl opacity-50">
+        </div>
+
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-blue-500 to-purple-600 text-white py-8 text-center">
+            <h1 class="text-2xl font-bold tracking-wide">Hello, <%= user.name %>!</h1>
+            <p class="text-sm opacity-80">Welcome back to your dashboard</p>
+            <button
+            class="mt-4 px-6 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all duration-300">
+          <a href="/logout">logout</a>
+        </button> 
+        </header>
+
+        <!-- Task List Section -->
+        <div class="p-6 space-y-6 h-[75%] overflow-y-auto" style="-ms-overflow-style: none; scrollbar-width: none;">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2l4 -4m6 2a9 9 0 1 1 -18 0a9 9 0 0 1 18 0z" />
+                    </svg>
+                    Your Tasks
+                </h2>
+                <button onclick="togglePopup()"
+                    class="px-4 py-2 text-white bg-blue-600 rounded-full flex items-center gap-2 hover:bg-blue-700 transition-all duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
+                    </svg>
+                    Add Task
+                </button>
+            </div>
+
+            <% if (user.tasks && user.tasks.length> 0) { %>
+                <ul class="space-y-4">
+                    <% user.tasks.forEach(task=> { %>
+                        <li
+                            class="p-6 bg-white/80 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-gray-800 text-xl">
+                                    <%= task.title %>
+                                </h3>
+                                <span
+                                    class="text-sm px-3 py-1 rounded-full <%= task.completed ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' %>">
+                                    <%= task.completed ? "Completed" : "Pending" %>
+                                </span>
+                            </div>
+
+                            <p class="text-gray-600 mt-2 text-sm">
+                                <%= task.description %>
+                            </p>
+
+                            <p class="text-gray-500 mt-1 text-xs">
+                                <%= new Date(task.createdAt).toLocaleString() %>
+                            </p>
+
+                            <div class="flex items-center justify-start gap-4 mt-4">
+                                <button
+                                class="flex items-center gap-2 text-gray-600 bg-gray-200 px-3 py-1 rounded-lg text-sm hover:bg-gray-300 transition-all duration-300"
+                                onclick="openEditPopup('<%= task.title %>', '<%= task.description %>', '<%= task._id %>')">
+                                Edit
+                            </button>
+                            <form action="/task/delete-task/<%= task._id %>" method="POST">
+                                <input type="hidden" name="_method" value="DELETE"> <!-- Simulate DELETE method -->
+                                <button type="submit"
+                                        class="flex items-center gap-2 text-white bg-red-600 px-3 py-1 rounded-lg text-sm hover:bg-red-700 transition-all duration-300">
+                                    Delete
+                                </button>
+                            </form>
+                            
+                            
+                            
+                            </div>
+                        </li>
+                        <% }); %>
+                </ul>
+                <% } else { %>
+                    <p class="text-gray-600 text-center mt-6">No tasks found. Add some to get started!</p>
+                    <% } %>
+        </div>
+
+        <!-- Footer Section -->
+        <footer
+            class="absolute bottom-0 left-0 w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 text-center">
+            <p class="text-sm opacity-75">Stay productive and organized!</p>
+        </footer>
+    </div>
+
+    <!-- Popup for Adding Task -->
+    <div id="popup" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-8 shadow-xl w-[90%] sm:w-[400px]">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Create New Task</h2>
+            <form action="/task/create" method="post">
+                <label for="title" class="block text-sm font-semibold mb-2">Title</label>
+                <input type="text" id="title" name="title"
+                    class="w-full p-2 border rounded-lg mb-4 focus:outline-none focus:ring focus:ring-blue-300"
+                    required>
+
+                <label for="description" class="block text-sm font-semibold mb-2">Description</label>
+                <textarea id="description" name="description" rows="4"
+                    class="w-full p-2 border rounded-lg mb-6 focus:outline-none focus:ring focus:ring-blue-300"
+                    required></textarea>
+
+                <div class="flex justify-end gap-4">
+                    <button type="button" onclick="togglePopup()"
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-all">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">
+                        Add
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+
+    <div id="editPopup" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-8 shadow-xl w-[90%] sm:w-[400px]">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Edit Task</h2>
+            <form id="editForm"  method="post">
+                <input type="hidden" id="editTaskId" name="taskId">
+                <label for="editTitle" class="block text-sm font-semibold mb-2">Title</label>
+                <input type="text" id="editTitle" name="title"
+                    class="w-full p-2 border rounded-lg mb-4 focus:outline-none focus:ring focus:ring-blue-300" required>
+
+                <label for="editDescription" class="block text-sm font-semibold mb-2">Description</label>
+                <textarea id="editDescription" name="description" rows="4"
+                    class="w-full p-2 border rounded-lg mb-6 focus:outline-none focus:ring focus:ring-blue-300"
+                    required></textarea>
+
+                <div class="flex justify-end gap-4">
+                    <button type="button" onclick="toggleEditPopup()"
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-all">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">
+                        Update
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        function togglePopup() {
+            const popup = document.getElementById('popup');
+            popup.classList.toggle('hidden');
+        }
+
+        function togglePopup() {
+            const popup = document.getElementById('popup');
+            popup.classList.toggle('hidden');
+        }
+
+        function openEditPopup(title, description, taskId) {
+            const editPopup = document.getElementById('editPopup');
+            const editTitle = document.getElementById('editTitle');
+            const editDescription = document.getElementById('editDescription');
+            const editTaskId = document.getElementById('editTaskId');
+            
+
+            editTitle.value = title;
+            editDescription.value = description;
+            editTaskId.value = taskId;
+
+            editPopup.classList.remove('hidden');
+
+            editForm.action = `/task/edit/${taskId}`;
+
+        }
+
+        function toggleEditPopup() {
+            const editPopup = document.getElementById('editPopup');
+            editPopup.classList.toggle('hidden');
+        }
+    </script>
+</body>
+
+</html>
